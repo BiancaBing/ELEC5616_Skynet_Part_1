@@ -11,12 +11,13 @@ from Crypto.Hash import SHA
 
 
 class StealthConn(object):
-    def __init__(self, conn, client=False, server=False, verbose=False):
+    def __init__(self, conn, client=False, server=False, verbose=False, verbose2=False):
         self.conn = conn
         self.cipher = None
         self.client = client
         self.server = server
         self.verbose = verbose
+        self.verbose2 = verbose2
         self.initiate_session()
         self.shared_hash = b''
         self.nonce = b''
@@ -60,14 +61,14 @@ class StealthConn(object):
                     print("Sending packet of length {}".format(len(encrypted_data)))
                     print("The HMAC using md5 is {}".format(md5))
                     print("The length of HMAC is {}".format(len(md5)))
-                    print("The nonce recieved is {}".format(self.nonce))
-                    # print("The signature is {}".format(sigstr))
+                    print("The nonce sending in package is {}".format(self.nonce))
             else:
                 encrypted_data = data
                 pkt_len = struct.pack('H', len(encrypted_data))
                 self.conn.sendall(pkt_len)
                 self.conn.sendall(encrypted_data)
                 self.nonce = data
+                print("The nonce sending to client is {}".format(self.nonce))
 
         else:
             encrypted_data = data
@@ -95,7 +96,7 @@ class StealthConn(object):
                     if(nonce_received!=b''):
                         print("Replay Attack!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                         print("The current nonce is {}".format(self.nonce))
-                        print("The nonce recieved is {}".format(nonce_received))
+                        print("The nonce recieved is from package{}".format(nonce_received))
                         data = b'replayattck'
                     else:
                         print("Data recieved is null")
@@ -110,19 +111,18 @@ class StealthConn(object):
                         data = ANSI_X923_unpad(padded_c, AES.block_size)
                     else:
                         data = padded_c
-                    # h = SHA.new(padded_c).digest()
-                    # sig_verify = self.pubkey.verify(h,sig_received)
-                    print("Receiving packet of length {}".format(data_len+mac_len))
-                    print("Encrypted data: {}".format(repr(encrypted_data)))
-                    print("MD5 received: {}".format(md5_received))
-                    print("MD5 calculated with received: {}".format(md5_recalculate))
-                    print("The nonce sent is {}".format(self.nonce))
-                    print("The nonce recieved is {}".format(nonce_received))
-                    # print("Nonce recieved is {}".format(nonce_recieved))
-                    if md5_recalculate == md5_received:
-                        print("The data received correctly!")
-                    else:
-                        print("The data was corrupted!")
+                    if self.verbose2:
+                        print("Receiving packet of length {}".format(data_len+mac_len))
+                        print("Encrypted data: {}".format(repr(encrypted_data)))
+                        print("MD5 received: {}".format(md5_received))
+                        print("MD5 calculated with received: {}".format(md5_recalculate))
+                        print("The current nonce is {}".format(self.nonce))
+                        print("The nonce recieved from server is {}".format(nonce_received))
+                        # print("Nonce recieved is {}".format(nonce_recieved))
+                        if md5_recalculate == md5_received:
+                            print("The data received correctly!")
+                        else:
+                            print("The data was corrupted!")
             else:
                 pkt_len_packed = self.conn.recv(struct.calcsize('H'))
                 unpacked_contents = struct.unpack('H', pkt_len_packed)
@@ -130,6 +130,7 @@ class StealthConn(object):
                 encrypted_data = self.conn.recv(pkt_len)
                 data = encrypted_data
                 self.nonce = data
+                print("The nonce sending from server is {}".format(self.nonce))
 
 
         else:
