@@ -3,7 +3,6 @@ import threading
 
 from lib.comms import StealthConn
 from lib.files import p2p_download_file
-from Crypto.Random import random
 
 # Keep track of where our server is
 # This is primarily so we don't try to talk to ourselves
@@ -28,26 +27,16 @@ def find_bot():
                 port += 1
 
 def echo_server(sconn):
-    list = []
-    i=0
     while 1:
-        nonce = random.randint(0, int(2 ** 100))
-        nonce = bytes(str(nonce),"ascii")
-        list.append(nonce)
-        if nonce!=b'':
-            while nonce in list:
-                nonce = random.randint(0, int(2 ** 100))
-                nonce = bytes(str(nonce), "ascii")
-            list.append(nonce)
-            sconn.send(nonce)
+        sconn.verbose = False
+        sconn.verbose2 = True
         data = sconn.recv()
         print("ECHOING>", data)
         sconn.send(data)
-        if data == b'x' or data == b'exit' or data == b'quit':
+        if data == b'X' or data == b'exit' or data == b'quit':
             print("Closing connection...")
             sconn.close()
             return
-
 
 def accept_connection(conn):
     try:
