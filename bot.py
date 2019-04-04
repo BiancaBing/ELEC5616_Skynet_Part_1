@@ -30,20 +30,19 @@ def p2p_echo():
                     print("nonce error")
                     sconn.close()
             # if i==0 or (i>0 and list[i-1]!=nonce):
-            if 1:
-                msg = input("Echo> ")
-                byte_msg = bytes(msg, "ascii")
-                sconn.send(byte_msg)
-                # This other bot should echo it back to us
-                echo = sconn.recv()
-                # Ensure that what we sent is what we got back
-                # print("echo::",echo)
-                # print("byte_msg::",byte_msg)
-                assert(echo == byte_msg)
-                # If the msg is X, then terminate the connection
-                if msg.lower() == 'x' or msg.lower() == "exit" or msg.lower() == "quit" or msg.lower()=="replayattck":
-                    sconn.close()
-                    break
+            msg = input("Echo> ")
+            byte_msg = bytes(msg, "ascii")
+            sconn.send(byte_msg)
+            # This other bot should echo it back to us
+            echo = sconn.recv()
+            # Ensure that what we sent is what we got back
+            # print("echo::",echo)
+            # print("byte_msg::",byte_msg)
+            assert(echo == byte_msg)
+            # If the msg is X, then terminate the connection
+            if msg.lower() == 'x' or msg.lower() == "exit" or msg.lower() == "quit" or msg.lower()=="replayattck":
+                sconn.close()
+                break
             list.append(nonce)
             i+=1
     except socket.error:

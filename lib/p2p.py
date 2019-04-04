@@ -41,12 +41,9 @@ def echo_server(sconn):
             list.append(nonce)
             sconn.send(nonce)
         data = sconn.recv()
-        if data == 'x' or data == "exit" or data == "quit" or data == "replayattck":
-            sconn.close()
-            break
         print("ECHOING>", data)
         sconn.send(data)
-        if data == b'X' or data == b'exit' or data == b'quit':
+        if data == b'x' or data == b'exit' or data == b'quit':
             print("Closing connection...")
             sconn.close()
             return
