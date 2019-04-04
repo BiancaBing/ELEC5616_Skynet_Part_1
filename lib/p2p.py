@@ -6,11 +6,11 @@ from lib.files import p2p_download_file
 
 # Keep track of where our server is
 # This is primarily so we don't try to talk to ourselves
-server_port = 1337
+server_port = 60000
 noncelist = []
 def find_bot():
     print("Finding another bot...")
-    port = 1337
+    port = 60000
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while 1:
         if port == server_port:
@@ -26,22 +26,28 @@ def find_bot():
                 print("No bot was listening on port %d" % port)
                 port += 1
 
+
 def echo_server(sconn):
+    counter = 0
     while 1:
-        sconn.verbose = False
-        sconn.verbose2 = True
-        data = sconn.recv(nonce=noncelist[-1])
-        nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
-        while nonce in noncelist:
+        if counter % 2 == 1:
             nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
-        noncelist.append(nonce)
-        sconn.send(nonce, crypto=False)
-        print("ECHOING>", data)
-        if data == b'X' or data == b'exit' or data == b'quit':
-            print("Closing connection...")
-            noncelist[:] = []
-            sconn.close()
-            return
+            while nonce in noncelist:
+                nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
+            noncelist.append(nonce)
+            sconn.send(nonce, crypto=False)
+        else:
+            sconn.verbose = False
+            sconn.verbose2 = True
+            data = sconn.recv(nonce=noncelist[-1])
+            print("ECHOING>", data)
+
+            if data == b'X' or data == b'exit' or data == b'quit':
+                print("Closing connection...")
+                noncelist[:] = []
+                sconn.close()
+                return
+        counter += 1
 
 def accept_connection(conn):
     try:

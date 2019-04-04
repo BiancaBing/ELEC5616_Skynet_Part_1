@@ -18,6 +18,7 @@ def p2p_upload(fn):
 
 def p2p_echo():
     try:
+        counter = 0
         sconn = find_bot()
         # Set verbose to true so we can view the encoded packets
         sconn.verbose = True
@@ -25,15 +26,18 @@ def p2p_echo():
         sconn.send(bytes("ECHO", "ascii"), crypto=True)
         while 1:
             # Read a message and send it to the other bot
-            nonce = sconn.recv(crypto=False)
-            print("The next nonce is {}".format(nonce))
-            msg = input("Echo> ")
-            byte_msg = bytes(msg, "ascii")
-            sconn.send(byte_msg, crypto=True, nonce=nonce)
-            # If the msg is X, then terminate the connection
-            if byte_msg == b'X' or msg.lower() == "exit" or msg.lower() == "quit":
-                sconn.close()
-                break
+            if counter % 2 == 0:
+                nonce = sconn.recv(crypto=False)
+                print("The next nonce is {}".format(nonce))
+            else:
+                msg = input("Echo> ")
+                byte_msg = bytes(msg, "ascii")
+                sconn.send(byte_msg, crypto=True, nonce=nonce)
+                # If the msg is X, then terminate the connection
+                if byte_msg == b'X' or msg.lower() == "exit" or msg.lower() == "quit":
+                    sconn.close()
+                    break
+            counter += 1
     except socket.error:
         print("Connection closed unexpectedly")
 

@@ -2,6 +2,7 @@ import struct
 import hashlib
 import hmac
 from Crypto.Cipher import AES
+from lib.Padding import pad, unpad
 from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 from dh import create_dh_key, calculate_dh_secret
 import time
@@ -39,7 +40,7 @@ class StealthConn(object):
     def send(self, data, crypto=True, nonce=None):
         if crypto and (nonce is not None):
             if self.cipher:
-                padded_m = ANSI_X923_pad(data, AES.block_size)
+                padded_m = pad(data, AES.block_size)
                 encrypted_data = self.cipher.encrypt(padded_m)
                 t = str(time.time()).encode('ascii')
                 sending = bytes(bytearray(encrypted_data) + bytearray(t))
@@ -71,6 +72,7 @@ class StealthConn(object):
         # Decode the data's length from an unsigned two byte int ('H')
         if crypto and (nonce is not None):
             if self.cipher:
+                flag = True
                 pkt_len_packed = self.conn.recv(struct.calcsize('HHHH'))
                 unpacked_contents = struct.unpack('HHHH', pkt_len_packed)
                 data_len = unpacked_contents[0]
@@ -85,9 +87,9 @@ class StealthConn(object):
                 receiving = bytes(bytearray(encrypted_data) + bytearray(time_received))
                 md5_recalculate = hmac.new(self.shared_hash, receiving, hashlib.md5).hexdigest().encode("ascii")
                 padded_c = self.cipher.decrypt(encrypted_data)
-                data = ANSI_X923_unpad(padded_c, AES.block_size)
+                data = unpad(padded_c, AES.block_size)
                 time_now = time.time()
-                if self.verbose2:
+                if self.verbose2 and flag:
                     print("Receiving packet of length {}".format(data_len + md5_len + time_len))
                     print("Encrypted data: {}".format(repr(encrypted_data)))
                     print("MD5 received: {}".format(md5_received))
