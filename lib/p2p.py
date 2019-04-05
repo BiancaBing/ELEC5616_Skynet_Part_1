@@ -31,22 +31,23 @@ def echo_server(sconn):
     list = []
     i=0
     while 1:
+        sconn.verbose = False
+        sconn.verbose2 = True
         nonce = random.randint(0, int(2 ** 100))
         nonce = bytes(str(nonce),"ascii")
+        while nonce in list:
+            nonce = random.randint(0, int(2 ** 100))
+            nonce = bytes(str(nonce), "ascii")
         list.append(nonce)
-        if nonce!=b'':
-            while nonce in list:
-                nonce = random.randint(0, int(2 ** 100))
-                nonce = bytes(str(nonce), "ascii")
-            list.append(nonce)
-            sconn.send(nonce)
+        sconn.send(nonce)
         data = sconn.recv()
         print("ECHOING>", data)
-        sconn.send(data)
+
         if data == b'x' or data == b'exit' or data == b'quit':
             print("Closing connection...")
             sconn.close()
             return
+        print("--------------------------------------")
 
 
 def accept_connection(conn):
