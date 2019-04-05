@@ -1,17 +1,16 @@
 import socket
 import threading
-
+from Crypto.Random import random
 from lib.comms import StealthConn
 from lib.files import p2p_download_file
-from Crypto.Random import random
 
 # Keep track of where our server is
 # This is primarily so we don't try to talk to ourselves
-server_port = 1337
-
+server_port = 60000
+noncelist = []
 def find_bot():
     print("Finding another bot...")
-    port = 1337
+    port = 60000
     conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     while 1:
         if port == server_port:
@@ -27,27 +26,28 @@ def find_bot():
                 print("No bot was listening on port %d" % port)
                 port += 1
 
-def echo_server(sconn):
-    list = []
-    i=0
-    while 1:
-        nonce = random.randint(0, int(2 ** 100))
-        nonce = bytes(str(nonce),"ascii")
-        list.append(nonce)
-        if nonce!=b'':
-            while nonce in list:
-                nonce = random.randint(0, int(2 ** 100))
-                nonce = bytes(str(nonce), "ascii")
-            list.append(nonce)
-            sconn.send(nonce)
-        data = sconn.recv()
-        print("ECHOING>", data)
-        sconn.send(data)
-        if data == b'x' or data == b'exit' or data == b'quit':
-            print("Closing connection...")
-            sconn.close()
-            return
 
+def echo_server(sconn):
+    counter = 0
+    while 1:
+        if counter % 2 == 1:
+            nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
+            while nonce in noncelist:
+                nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
+            noncelist.append(nonce)
+            sconn.send(nonce, crypto=False)
+        else:
+            sconn.verbose = False
+            sconn.verbose2 = True
+            data = sconn.recv(nonce=noncelist[-1])
+            print("ECHOING>", data)
+
+            if data == b'X' or data == b'exit' or data == b'quit':
+                print("Closing connection...")
+                noncelist[:] = []
+                sconn.close()
+                return
+        counter += 1
 
 def accept_connection(conn):
     try:
@@ -55,6 +55,9 @@ def accept_connection(conn):
         # The sender is either going to chat to us or send a file
         cmd = sconn.recv()
         if cmd == b'ECHO':
+            nonce = str(random.randint(1, 2 ** 100)).encode("ascii")
+            sconn.send(nonce, crypto=False)
+            noncelist.append(nonce)
             echo_server(sconn)
         elif cmd == b'FILE':
             p2p_download_file(sconn)
