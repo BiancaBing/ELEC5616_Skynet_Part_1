@@ -19,32 +19,26 @@ def p2p_echo():
         sconn = find_bot()
         # Set verbose to true so we can view the encoded packets
         sconn.verbose = True
+        sconn.verbose2 = False
         sconn.send(bytes("ECHO", "ascii"))
-        list=[]
-        i=0
         while 1:
             # Read a message and send it to the other bot
-            nonce = sconn.recv()
-            if i!=0:
-                if nonce == b'':
-                    print("nonce error")
-                    sconn.close()
+            sconn.recv()
             # if i==0 or (i>0 and list[i-1]!=nonce):
             msg = input("Echo> ")
+            sconn.verbose2 = True
             byte_msg = bytes(msg, "ascii")
             sconn.send(byte_msg)
             # This other bot should echo it back to us
             echo = sconn.recv()
             # Ensure that what we sent is what we got back
-            # print("echo::",echo)
-            # print("byte_msg::",byte_msg)
-            assert(echo == byte_msg)
+            # assert (echo == byte_msg)
             # If the msg is X, then terminate the connection
-            if msg.lower() == 'x' or msg.lower() == "exit" or msg.lower() == "quit" or msg.lower()=="replayattck":
+            if byte_msg == b'x' or msg.lower() == "exit" or msg.lower() == "quit" or echo == b'replayattack':
                 sconn.close()
                 break
-            list.append(nonce)
-            i+=1
+            print("--------------------------------------")
+
     except socket.error:
         print("Connection closed unexpectedly")
 
