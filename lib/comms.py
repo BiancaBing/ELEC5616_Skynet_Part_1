@@ -73,7 +73,7 @@ class StealthConn(object):
                 self.conn.sendall(pkt_len)
                 self.conn.sendall(encrypted_data)
                 self.nonce = data
-                print("The nonce sending to client is {}".format(self.nonce))
+                # print("The nonce sending to client is {}".format(self.nonce))
 
         else:
             encrypted_data = data
@@ -136,7 +136,7 @@ class StealthConn(object):
                 encrypted_data = self.conn.recv(pkt_len)
                 data = encrypted_data
                 self.nonce = data
-                print("The nonce sending from server is {}".format(self.nonce))
+                # print("The nonce sending from server is {}".format(self.nonce))
 
 
         else:
