@@ -24,7 +24,7 @@ prime = read_hex(raw_prime)
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    a = random.randint(0, int(2**8))
+    a = random.randint(0, prime)
     b = pow(2, a, prime)
     return (b, a)
 

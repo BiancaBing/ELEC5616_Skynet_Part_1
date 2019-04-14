@@ -99,7 +99,7 @@ class StealthConn(object):
                 encrypted_data = bytes(all_data[mac_len:data_len+mac_len])
                 nonce_received = bytes(all_data[data_len+mac_len:])
                 time_now = time.time()
-                if(((nonce_received!=self.nonce and nonce_received!=b'') or (time_now-time_received)>0.002)and self.verbose2 == True):
+                if(((nonce_received!=self.nonce and nonce_received!=b'') or (time_now-time_received)>1)and self.verbose2 == True):
                     print("Replay Attack!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The current nonce is {}".format(self.nonce))
                     print("The nonce recieved is from package{}".format(nonce_received))
