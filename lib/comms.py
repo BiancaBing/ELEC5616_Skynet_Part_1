@@ -2,15 +2,9 @@ import struct
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 from Crypto.Hash import HMAC
-from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 from dh import create_dh_key, calculate_dh_secret
 from lib.Padding import pad, unpad
-
-from Crypto.Random import random
-from Crypto.PublicKey import DSA
-from Crypto.Hash import SHA
 import time
-
 
 
 class StealthConn(object):
@@ -49,12 +43,11 @@ class StealthConn(object):
                 padded_m = pad(data, AES.block_size)
                 encrypted_data = self.cipher.encrypt(padded_m)
                 t = time.time()
+                md5_object = bytes(bytearray(t) + bytearray(encrypted_data) + bytearray(self.nonce))
                 mac = HMAC.new(self.shared_hash, digestmod=MD5)
-                mac.update(padded_m)
+                mac.update(md5_object)
                 md5 = mac.hexdigest().encode("ascii")
                 sending = bytes(bytearray(md5) + bytearray(encrypted_data) + bytearray(self.nonce))
-
-
                 pkt_len = struct.pack('HHHd', len(encrypted_data), len(md5), len(self.nonce),t)
                 self.conn.sendall(pkt_len)
                 self.conn.sendall(sending)
@@ -81,7 +74,6 @@ class StealthConn(object):
             self.conn.sendall(pkt_len)
             self.conn.sendall(encrypted_data)
 
-
     def recv(self):
         # Decode the data's length from an unsigned two byte int ('H')
         if self.cipher:
@@ -92,26 +84,25 @@ class StealthConn(object):
                 mac_len = unpacked_contents[1]
                 nonce_len = unpacked_contents[2]
                 time_received = unpacked_contents[3]
-                # nonce_recieved = unpacked_contents[2]
-                # sig_len = unpacked_contents[2]
                 all_data = bytearray(self.conn.recv(data_len+mac_len+nonce_len))
                 md5_received = bytes(all_data[:mac_len])
                 encrypted_data = bytes(all_data[mac_len:data_len+mac_len])
                 nonce_received = bytes(all_data[data_len+mac_len:])
                 time_now = time.time()
-                if(((nonce_received!=self.nonce and nonce_received!=b'') or (time_now-time_received)>1)and self.verbose2 == True):
+                if(((nonce_received != self.nonce and nonce_received != b'') or (time_now-time_received) > 1)
+                        and self.verbose2 is True):
                     print("Replay Attack!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The current nonce is {}".format(self.nonce))
-                    print("The nonce recieved is from package{}".format(nonce_received))
+                    print("The nonce received is from package{}".format(nonce_received))
                     print("Sending time: {}".format(time_received))
                     print("Received time: {}".format(time_now))
                     print("Difference of time: {}".format(time_now - time_received))
                     data = b'replayattack'
-                    # self.close()
                 else:
                     padded_c = self.cipher.decrypt(encrypted_data)
                     mac = HMAC.new(self.shared_hash, digestmod=MD5)
-                    mac.update(padded_c)
+                    md5_object = bytes(bytearray(time_received) + bytearray(encrypted_data) + bytearray(nonce_received))
+                    mac.update(md5_object)
                     md5_recalculate = mac.hexdigest().encode("ascii")
                     data = unpad(padded_c, AES.block_size)
                     if self.verbose2:
@@ -120,11 +111,10 @@ class StealthConn(object):
                         print("MD5 received: {}".format(md5_received))
                         print("MD5 calculated with received: {}".format(md5_recalculate))
                         print("The current nonce is {}".format(self.nonce))
-                        print("The nonce recieved from server is {}".format(nonce_received))
+                        print("The nonce received from server is {}".format(nonce_received))
                         print("Sending time: {}".format(time_received))
                         print("Received time: {}".format(time_now))
                         print("Difference of time: {}".format(time_now - time_received))
-                        # print("Nonce recieved is {}".format(nonce_recieved))
                         if md5_recalculate == md5_received:
                             print("The data received correctly!")
                         else:
@@ -145,7 +135,6 @@ class StealthConn(object):
             pkt_len = unpacked_contents[0]
             encrypted_data = self.conn.recv(pkt_len)
             data = encrypted_data
-        # if self.nonce == nonce_recieved:
         return data
 
     def close(self):
