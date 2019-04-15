@@ -42,13 +42,13 @@ class StealthConn(object):
             if self.client:
                 padded_m = pad(data, AES.block_size)
                 encrypted_data = self.cipher.encrypt(padded_m)
-                t = time.time()
+                t = str(time.time()).encode('ascii')
                 md5_object = bytes(bytearray(t) + bytearray(encrypted_data) + bytearray(self.nonce))
                 mac = HMAC.new(self.shared_hash, digestmod=MD5)
                 mac.update(md5_object)
                 md5 = mac.hexdigest().encode("ascii")
-                sending = bytes(bytearray(md5) + bytearray(encrypted_data) + bytearray(self.nonce))
-                pkt_len = struct.pack('HHHd', len(encrypted_data), len(md5), len(self.nonce),t)
+                sending = bytes(bytearray(t) + bytearray(md5) + bytearray(encrypted_data) + bytearray(self.nonce))
+                pkt_len = struct.pack('HHHH', len(encrypted_data), len(md5), len(t), len(self.nonce))
                 self.conn.sendall(pkt_len)
                 self.conn.sendall(sending)
                 if self.verbose:
@@ -78,43 +78,44 @@ class StealthConn(object):
         # Decode the data's length from an unsigned two byte int ('H')
         if self.cipher:
             if self.server:
-                pkt_len_packed = self.conn.recv(struct.calcsize('HHHd'))
-                unpacked_contents = struct.unpack('HHHd', pkt_len_packed)
+                pkt_len_packed = self.conn.recv(struct.calcsize('HHHH'))
+                unpacked_contents = struct.unpack('HHHH', pkt_len_packed)
                 data_len = unpacked_contents[0]
-                mac_len = unpacked_contents[1]
-                nonce_len = unpacked_contents[2]
-                time_received = unpacked_contents[3]
-                all_data = bytearray(self.conn.recv(data_len+mac_len+nonce_len))
-                md5_received = bytes(all_data[:mac_len])
-                encrypted_data = bytes(all_data[mac_len:data_len+mac_len])
-                nonce_received = bytes(all_data[data_len+mac_len:])
+                md5_len = unpacked_contents[1]
+                time_len = unpacked_contents[2]
+                nonce_len = unpacked_contents[3]
+                all_data = bytearray(self.conn.recv(data_len + md5_len + time_len + nonce_len))
+                time_received = bytes(all_data[:time_len])
+                md5_received = bytes(all_data[time_len:md5_len + time_len])
+                encrypted_data = bytes(all_data[time_len + md5_len:time_len + md5_len + data_len])
+                nonce_received = bytes(all_data[data_len + md5_len + time_len:])
+                receiving = bytes((bytearray(time_received) + bytearray(encrypted_data) + bytearray(nonce_received)))
                 time_now = time.time()
-                if(((nonce_received != self.nonce and nonce_received != b'') or (time_now-time_received) > 1)
+                if (((nonce_received != self.nonce and nonce_received != b'') or (time_now - float(time_received)) > 1)
                         and self.verbose2 is True):
                     print("Replay Attack!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
                     print("The current nonce is {}".format(self.nonce))
                     print("The nonce received is from package{}".format(nonce_received))
                     print("Sending time: {}".format(time_received))
                     print("Received time: {}".format(time_now))
-                    print("Difference of time: {}".format(time_now - time_received))
+                    print("Difference of time: {}".format(time_now - float(time_received)))
                     data = b'replayattack'
                 else:
                     padded_c = self.cipher.decrypt(encrypted_data)
                     mac = HMAC.new(self.shared_hash, digestmod=MD5)
-                    md5_object = bytes(bytearray(time_received) + bytearray(encrypted_data) + bytearray(nonce_received))
-                    mac.update(md5_object)
+                    mac.update(receiving)
                     md5_recalculate = mac.hexdigest().encode("ascii")
                     data = unpad(padded_c, AES.block_size)
                     if self.verbose2:
-                        print("Receiving packet of length {}".format(data_len+mac_len))
+                        print("Receiving packet of length {}".format(data_len + md5_len))
                         print("Encrypted data: {}".format(repr(encrypted_data)))
                         print("MD5 received: {}".format(md5_received))
                         print("MD5 calculated with received: {}".format(md5_recalculate))
                         print("The current nonce is {}".format(self.nonce))
-                        print("The nonce received from server is {}".format(nonce_received))
+                        print("The nonce received from client is {}".format(nonce_received))
                         print("Sending time: {}".format(time_received))
                         print("Received time: {}".format(time_now))
-                        print("Difference of time: {}".format(time_now - time_received))
+                        print("Difference of time: {}".format(time_now - float(time_received)))
                         if md5_recalculate == md5_received:
                             print("The data received correctly!")
                         else:
