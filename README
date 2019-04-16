@@ -4,34 +4,75 @@ Welcome to SkyNet
 
 
 Usage: Peer to Peer (Echo)
-(Note: Requires two bots at the same time)
 ==========================
-smerity@pegasus:~/usyd/elec5616_proj/framework$ python3.2 bot.py
+(Client)
+==========================
+wentian@pop-os:~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
 Listening on port 1337
 Waiting for connection...
 Enter command: p2p echo
 Finding another bot...
 Found bot on port 1338
-Shared hash: c2bd47c3ac55f104c052dca02eaa6c9de22e7637370584e5d2ba3c9c81bf2ab8
-Original data: b'ECHO'
-Encrypted data: b'!qpz'
-Sending packet of length 4
-Echo> Test
-Original data: b'Test'
-Encrypted data: b'0WKA'
-Sending packet of length 4
-Receiving packet of length 4
-Encrypted data: b'0WKA'
-Original data: b'Test'
-Echo> exit
-Original data: b'exit'
-Encrypted data: b'\x01JQA'
-Sending packet of length 4
-Receiving packet of length 4
-Encrypted data: b'\x01JQA'
-Original data: b'exit'
+Shared hash: "4d4c9edaa3a55b815834b966fe6d3bacd9c1d209a967443bd1e6900525655849"
+--------------------------------------
+Original data: "ECHO"
+Encrypted data: b'[\x03\xf2\xc1\xab\xe9\xd4\xa3W1\xd0\x08\xa9k\xc8\x05'
+Sending packet of length 16
+The HMAC using md5 is "d46e795f5e039d4e8b8571cc548dc989"
+The length of HMAC is 32
+timestamp is "1555428542.036479"
+--------------------------------------
+Echo> Hello
+Original data: "Hello"
+Encrypted data: b'\xf6\xa1\x85\x15\xc0\x97\x81\x04\x9c\xc0\xf4+<\xf4\xe9L'
+Sending packet of length 16
+The HMAC using md5 is "6ebc88b0111c013b2bb19e8b96af2e7f"
+The length of HMAC is 32
+The nonce sending in package is "760243219464636751169689972325"
+timestamp is "1555428545.8647454"
+--------------------------------------
+Echo> Goodbye
+Original data: "Goodbye"
+Encrypted data: b'"\xd0\x99\xb9\xdd\x9f>\x03l8\xbe\x1a?!\xb0\x97'
+Sending packet of length 16
+The HMAC using md5 is "b40103b676277b47832a3daf7249fbd8"
+The length of HMAC is 32
+The nonce sending in package is "111637977049904542973366634682"
+timestamp is "1555428555.9954221"
+--------------------------------------
 
-Notice: 'Test' and 'exit' are sent and received as the same encrypted message.
-This means it's vulnerable to frequency analysis. When 'a' is sent multiple times,
-it ends up "looping" as we're using a simple repeated XOR cypher.
-This is something that should be fixed.
+
+(Server)
+===========================
+wentian@pop-os:~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
+Port 1337 not available
+Listening on port 1338
+Waiting for connection...
+Enter command: Accepted a connection from ('127.0.0.1', 37672)...
+Waiting for connection...
+Shared hash: "4d4c9edaa3a55b815834b966fe6d3bacd9c1d209a967443bd1e6900525655849"
+--------------------------------------
+Receiving packet of length 48
+Encrypted data: b'\xf6\xa1\x85\x15\xc0\x97\x81\x04\x9c\xc0\xf4+<\xf4\xe9L'
+MD5 received: "6ebc88b0111c013b2bb19e8b96af2e7f"
+MD5 calculated with received: "6ebc88b0111c013b2bb19e8b96af2e7f"
+The current nonce is "760243219464636751169689972325"
+The nonce received from client is "760243219464636751169689972325"
+Sending time: "1555428545.8647454"
+Received time: "1555428545.9058406"
+Difference of time: "0.04109525680541992"
+The data received correctly!
+ECHOING> Hello
+--------------------------------------
+Receiving packet of length 48
+Encrypted data: b'"\xd0\x99\xb9\xdd\x9f>\x03l8\xbe\x1a?!\xb0\x97'
+MD5 received: "b40103b676277b47832a3daf7249fbd8"
+MD5 calculated with received: "b40103b676277b47832a3daf7249fbd8"
+The current nonce is "111637977049904542973366634682"
+The nonce received from client is "111637977049904542973366634682"
+Sending time: "1555428555.9954221"
+Received time: "1555428556.0378208"
+Difference of time: "0.042398691177368164"
+The data received correctly!
+ECHOING> Goodbye
+

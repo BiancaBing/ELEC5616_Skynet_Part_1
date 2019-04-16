@@ -1,7 +1,5 @@
 from Crypto.Hash import SHA256
 from Crypto.Random import random
-
-
 from lib.helpers import read_hex
 
 # Project TODO: Is this the best choice of prime? Why? Why not? Feel free to replacasddsae!
@@ -25,8 +23,8 @@ prime = read_hex(raw_prime)
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    a = random.randint(0, prime)
-    b = pow(2, a, prime)
+    a = random.randint(0, prime)  # Generate a random number in range of RFC3526
+    b = pow(2, a, prime)  # calculate the g^a or g^b used to exchange each other's secret
     return b, a
 
 
@@ -42,3 +40,8 @@ def calculate_dh_secret(their_public, my_private):
     # Feel free to change SHA256 to a different value if more appropriate
     shared_hash = SHA256.new(bytes(str(shared_secret), "ascii")).hexdigest()
     return shared_hash
+
+
+def calculate_iv(their_public, my_private):
+    shared_secret = pow(their_public, my_private, prime)
+    return shared_secret
