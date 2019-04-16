@@ -26,14 +26,14 @@ def p2p_echo():
             sconn.recv()
             # if i==0 or (i>0 and list[i-1]!=nonce):
             msg = input("Echo> ")
+            # Set verbose2 to true if server is ready to recieve data
             sconn.verbose2 = True
             byte_msg = bytes(msg, "ascii")
             sconn.send(byte_msg)
             # This other bot should echo it back to us
             echo = sconn.recv()
-            # Ensure that what we sent is what we got back
-            # assert (echo == byte_msg)
-            # If the msg is X, then terminate the connection
+            # If the msg is x or exit or quit, then terminate the connection
+            # If a replay attack is detected, then terminate the connection
             if byte_msg == b'x' or msg.lower() == "exit" or msg.lower() == "quit" or echo == b'replayattack':
                 sconn.close()
                 break

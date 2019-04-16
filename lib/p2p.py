@@ -32,17 +32,25 @@ def echo_server(sconn):
     i=0
     while 1:
         sconn.verbose = False
+        # Set verbose2 to true if server is ready to recieve data
         sconn.verbose2 = True
+        # Nonce is used to avoid replay attack and is needed to be refreshed in every connection
         nonce = random.randint(0, int(2 ** 100))
         nonce = bytes(str(nonce),"ascii")
+        # In connection, nonces can not be the same
         while nonce in list:
             nonce = random.randint(0, int(2 ** 100))
             nonce = bytes(str(nonce), "ascii")
         list.append(nonce)
+        # The nonce is sent from server to client
         sconn.send(nonce)
+        # Server recieve the data sent from client
         data = sconn.recv()
         print("ECHOING>", data)
+        # Server send data recieved from client back to client
         sconn.send(data)
+        # If the data is x or exit or quit, then terminate the connection.
+        # If a replay attack is detected, then terminate the connection
         if data == b'x' or data == b'exit' or data == b'quit' or data ==b'replayattack':
             print("Closing connection...")
             sconn.close()
