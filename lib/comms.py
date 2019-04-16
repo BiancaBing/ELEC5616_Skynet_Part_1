@@ -2,6 +2,7 @@ import struct
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 from Crypto.Hash import HMAC
+from Crypto import Random
 from dh import create_dh_key, calculate_dh_secret
 from lib.Padding import pad, unpad
 import time
@@ -33,7 +34,14 @@ class StealthConn(object):
             shared_hash = calculate_dh_secret(their_public_key, my_private_key)
             self.shared_hash = shared_hash.encode("ascii")
             print("Shared hash: {}".format(shared_hash))
-        self.cipher = AES.new(shared_hash[:32])
+            self.cipher = AES.new(shared_hash[:32])
+        if self.server:
+            iv = Random.new().read(AES.block_size)
+            self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, iv)
+            self.send(iv)
+        if self.client:
+            iv = self.recv()
+            self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, iv)
 
     def send(self, data):
         # nonce_send = random.randint(0, int(2**8))
