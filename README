@@ -7,7 +7,7 @@ Usage: Peer to Peer (Echo)
 ==========================
 (Client)
 ==========================
-wentian@pop-os:~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
+~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
 Listening on port 1337
 Waiting for connection...
 Enter command: p2p echo
@@ -44,7 +44,7 @@ timestamp is "1555428555.9954221"
 
 (Server)
 ===========================
-wentian@pop-os:~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
+~/Documents/ELEC5616_Skynet_Part_1$ python3 bot.py
 Port 1337 not available
 Listening on port 1338
 Waiting for connection...
